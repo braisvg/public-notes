@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生理学第3课 · 主动转运与细胞膜电活动 — 交互可视化</title>
+<style>
+:root{
+  --bg:#0f172a;--panel:#1e293b;--panel2:#334155;--line:#475569;
+  --text:#e2e8f0;--muted:#94a3b8;--dim:#64748b;
+  --teal:#2dd4bf;--teal-d:#0d9488;--cyan:#38bdf8;
+  --amber:#fbbf24;--orange:#fb923c;--red:#f87171;
+  --green:#4ade80;--purple:#c084fc;--pink:#f472b6;
+  --na:#fbbf24;--k:#38bdf8;--ca:#f87171;--h:#c084fc;--glu:#4ade80;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:"Microsoft YaHei","PingFang SC",sans-serif;line-height:1.7;overflow-x:hidden}
+header{background:linear-gradient(135deg,#0f766e,#0e7490);padding:40px 20px 30px;text-align:center;position:relative;overflow:hidden}
+header::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 50%,rgba(45,212,191,.15),transparent 50%),radial-gradient(circle at 80% 50%,rgba(56,189,248,.12),transparent 50%)}
+header h1{font-size:2rem;letter-spacing:2px;position:relative}
+header p{margin-top:8px;opacity:.85;font-size:.95rem;position:relative}
+nav{position:sticky;top:0;z-index:100;background:rgba(15,23,42,.95);backdrop-filter:blur(10px);display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--line)}
+nav a{text-decoration:none;color:var(--teal);font-weight:600;padding:6px 14px;border-radius:999px;font-size:.85rem;border:1px solid rgba(45,212,191,.3);transition:all .25s}
+nav a:hover{background:var(--teal);color:var(--bg);border-color:var(--teal)}
+main{max-width:1100px;margin:0 auto;padding:30px 18px 60px}
+section{margin-bottom:50px;scroll-margin-top:70px}
+h2{font-size:1.4rem;color:var(--teal);border-left:5px solid var(--amber);padding-left:14px;margin-bottom:8px}
+.sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
+.panel{background:var(--panel);border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid var(--line)}
+.panel h3{color:var(--cyan);margin-bottom:12px;font-size:1.1rem}
+.btn{display:inline-block;background:var(--teal-d);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;transition:all .2s;margin:4px}
+.btn:hover{background:var(--teal);transform:translateY(-1px)}
+.btn.amber{background:#b45309}.btn.amber:hover{background:var(--amber);color:var(--bg)}
+.btn.red{background:#b91c1c}.btn.red:hover{background:var(--red)}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:700;margin:2px}
+.tag-na{background:rgba(251,191,36,.15);color:var(--na)}
+.tag-k{background:rgba(56,189,248,.15);color:var(--k)}
+.tag-ca{background:rgba(248,113,113,.15);color:var(--ca)}
+.tag-h{background:rgba(192,132,252,.15);color:var(--h)}
+.info{background:rgba(45,212,191,.08);border-left:3px solid var(--teal);padding:10px 14px;border-radius:6px;margin:12px 0;font-size:.88rem;color:var(--muted)}
+.warn{background:rgba(251,191,36,.08);border-left:3px solid var(--amber);padding:10px 14px;border-radius:6px;margin:12px 0;font-size:.88rem;color:#fcd34d}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0}
+th{background:var(--panel2);color:var(--teal);padding:10px 12px;text-align:left;font-weight:600}
+td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--muted)}
+tr:hover td{background:rgba(45,212,191,.04)}
+.svg-wrap{display:flex;justify-content:center;margin:16px 0}
+svg text{font-family:"Microsoft YaHei",sans-serif}
+.legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:12px;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.phase-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.phase-tab{padding:6px 14px;border-radius:8px;background:var(--panel2);color:var(--muted);cursor:pointer;font-size:.85rem;border:1px solid transparent;transition:all .2s}
+.phase-tab.active{background:var(--teal-d);color:#fff;border-color:var(--teal)}
+.phase-tab:hover{color:var(--text)}
+footer{text-align:center;color:var(--dim);font-size:.8rem;padding:30px;border-top:1px solid var(--line)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes floatUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-30px);opacity:0}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ 主动转运与细胞膜电活动</h1>
+  <p>生理学第3课 · 交互可视化 · 点击按钮观察离子运动 · 2026-09-10</p>
+</header>
+
+<nav>
+  <a href="#membrane">细胞膜结构</a>
+  <a href="#napump">钠泵动画</a>
+  <a href="#otherpumps">钙泵·质子泵</a>
+  <a href="#secondary">继发性转运</a>
+  <a href="#resting">静息电位</a>
+  <a href="#action">动作电位</a>
+  <a href="#summary">数据速查</a>
+</nav>
+
+<main>
+
+<!-- ==================== 1. 细胞膜结构总览 ==================== -->
+<section id="membrane">
+<h2>一、细胞膜结构与物质转运方式总览</h2>
+<p class="sub">磷脂双分子层 + 膜蛋白。物质进出细胞有四种方式，点击切换查看。</p>
+<div class="panel">
+  <div class="phase-tabs" id="transport-tabs">
+    <div class="phase-tab active" data-mode="passive">被动转运（顺差·不耗能）</div>
+    <div class="phase-tab" data-mode="primary">原发性主动转运（逆差·ATP）</div>
+    <div class="phase-tab" data-mode="secondary">继发性主动转运（逆差·间接ATP）</div>
+    <div class="phase-tab" data-mode="vesicle">膜泡运输（大分子）</div>
+  </div>
+  <div class="svg-wrap">
+    <svg id="membrane-svg" viewBox="0 0 800 320" width="100%" style="max-width:780px">
+      <!-- 细胞外标签 -->
+      <text x="30" y="30" fill="#94a3b8" font-size="14">细胞外（高 Na⁺、高 Ca²⁺）</text>
+      <!-- 磷脂双分子层 - 上排 -->
+      <g id="bilayer-upper"></g>
+      <!-- 磷脂双分子层 - 下排 -->
+      <g id="bilayer-lower"></g>
+      <!-- 膜蛋白占位 -->
+      <g id="membrane-proteins"></g>
+      <!-- 离子粒子 -->
+      <g id="ions-layer"></g>
+      <!-- 细胞内标签 -->
+      <text x="30" y="305" fill="#94a3b8" font-size="14">细胞内（高 K⁺、低 Ca²⁺、负电位）</text>
+    </svg>
+  </div>
+  <div id="transport-desc" class="info"></div>
+</div>
+</section>
+
+<!-- ==================== 2. 钠泵交互动画 ==================== -->
+<section id="napump">
+<h2>二、钠泵（Na⁺-K⁺-ATP酶）工作循环</h2>
+<p class="sub">最重要的原发性主动转运。每分解1分子ATP：<span class="tag tag-na">3个Na⁺出胞</span> <span class="tag tag-k">2个K⁺入胞</span>。点击"开始循环"观察全过程。</p>
+<div class="panel">
+  <div style="text-align:center;margin-bottom:12px">
+    <button class="btn" onclick="startNaPump()">▶ 开始循环</button>
+    <button class="btn amber" onclick="resetNaPump()">↺ 重置</button>
+  </div>
+  <div class="svg-wrap">
+    <svg id="napump-svg" viewBox="0 0 700 360" width="100%" style="max-width:680px">
+      <!-- 膜 -->
+      <rect x="0" y="140" width="700" height="80" fill="#1e3a5f" rx="4"/>
+      <text x="20" y="130" fill="#64748b" font-size="12">细胞外</text>
+      <text x="20" y="240" fill="#64748b" font-size="12">细胞内</text>
+      <!-- 钠泵蛋白 -->
+      <g id="pump-protein" transform="translate(310,120)">
+        <rect x="0" y="0" width="80" height="120" rx="12" fill="#0d9488" stroke="#2dd4bf" stroke-width="2"/>
+        <text x="40" y="65" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">钠泵</text>
+        <text x="40" y="82" text-anchor="middle" fill="#99f6e4" font-size="10">ATP酶</text>
+      </g>
+      <!-- ATP -->
+      <g id="atp-molecule" transform="translate(420,260)">
+        <circle r="16" fill="#fbbf24" opacity="0.9"/>
+        <text y="5" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">ATP</text>
+      </g>
+      <!-- Na+ ions (extracellular) -->
+      <g id="na-out">
+        <circle cx="120" cy="80" r="14" fill="#fbbf24" opacity="0.85"/>
+        <text x="120" y="85" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Na⁺</text>
+        <circle cx="180" cy="60" r="14" fill="#fbbf24" opacity="0.85"/>
+        <text x="180" y="65" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Na⁺</text>
+        <circle cx="240" cy="90" r="14" fill="#fbbf24" opacity="0.85"/>
+        <text x="240" y="95" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Na⁺</text>
+      </g>
+      <!-- Na+ ions (intracellular - to be pumped out) -->
+      <g id="na-in">
+        <circle cx="120" cy="280" r="14" fill="#fbbf24" opacity="0.85"/>
+        <text x="120" y="285" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Na⁺</text>
+        <circle cx="180" cy="300" r="14" fill="#fbbf24" opacity="0.85"/>
+        <text x="180" y="305" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Na⁺</text>
+        <circle cx="240" cy="275" r="14" fill="#fbbf24" opacity="0.85"/>
+        <text x="240" y="280" text-anchor="middle" fill="#1e293b" font-size="11" font-weight="bold">Na⁺</text>
+      </g>
+      <!-- K+ ions (extracellular - to be pumped in) -->
+      <g id="k-out">
+        <circle cx="520" cy="70" r="14" fill="#38bdf8" opacity="0.85"/>
+        <text x="520" y="75" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="bold">K⁺</text>
+        <circle cx="580" cy="95" r="14" fill="#38bdf8" opacity="0.85"/>
+        <text x="580" y="100" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="bold">K⁺</text>
+      </g>
+      <!-- K+ ions (intracellular) -->
+      <g id="k-in">
+        <circle cx="520" cy="290" r="14" fill="#38bdf8" opacity="0.85"/>
+        <text x="520" y="295" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="bold">K⁺</text>
+        <circle cx="580" cy="270" r="14" fill="#38bdf8" opacity="0.85"/>
+        <text x="580" y="275" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="bold">K⁺</text>
+      </g>
+      <!-- 状态文字 -->
+      <text id="pump-status" x="350" y="30" text-anchor="middle" fill="#2dd4bf" font-size="14" font-weight="bold">待机状态</text>
+      <!-- ADP/ Pi output -->
+      <g id="adp-output" transform="translate(420,260)" opacity="0">
+        <circle r="16" fill="#94a3b8"/>
+        <text y="5" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">ADP</text>
+      </g>
+    </svg>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:#fbbf24"></i>Na⁺（钠）</span>
+    <span><i class="dot" style="background:#38bdf8"></i>K⁺（钾）</span>
+    <span><i class="dot" style="background:#0d9488"></i>钠泵蛋白</span>
+    <span><i class="dot" style="background:#fbbf24;border:2px solid #fff"></i>ATP（能量）</span>
+  </div>
+  <div class="info" id="napump-info">
+    <strong>钠泵的四大生理意义：</strong>①维持胞内高K⁺（代谢反应需要）；②维持渗透压与细胞容积（防止细胞肿胀）；③建立Na⁺浓度梯度（为继发性主动转运和电活动提供势能储备）；④生电效应（净移出1个正电荷，使膜内电位更负）。
+  </div>
+</div>
+</section>
+
+<!-- ==================== 3. 钙泵与质子泵 ==================== -->
+<section id="otherpumps">
+<h2>三、钙泵与质子泵</h2>
+<p class="sub">钙泵维持胞质低钙（差约万倍），质子泵维持酸碱平衡。悬停查看细节。</p>
+
+<div class="panel">
+  <h3>🦴 钙泵（Ca²⁺-ATP酶）</h3>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 750 280" width="100%" style="max-width:730px">
+      <!-- 细胞膜 -->
+      <rect x="0" y="100" width="750" height="60" fill="#1e3a5f" rx="3"/>
+      <text x="15" y="90" fill="#64748b" font-size="12">细胞外 Ca²⁺: 1~2 mM</text>
+      <text x="15" y="185" fill="#64748b" font-size="12">细胞质 Ca²⁺: 0.1~0.2 μM（低钙）</text>
+      <!-- 质膜钙泵 -->
+      <g transform="translate(150,80)">
+        <rect width="60" height="100" rx="10" fill="#b91c1c" stroke="#f87171" stroke-width="2"/>
+        <text x="30" y="45" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">质膜</text>
+        <text x="30" y="60" text-anchor="middle" fill="#fecaca" font-size="10">钙泵</text>
+        <text x="30" y="75" text-anchor="middle" fill="#fecaca" font-size="9">1ATP→1Ca²⁺</text>
+      </g>
+      <!-- Ca2+ moving out -->
+      <g id="ca-out-anim">
+        <circle cx="200" cy="150" r="12" fill="#f87171" opacity="0.9">
+          <animate attributeName="cy" from="150" to="50" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.9;0.9;0" keyTimes="0;0.8;1" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <text x="200" y="155" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">Ca²⁺
+          <animate attributeName="y" from="155" to="55" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.8;1" dur="2s" repeatCount="indefinite"/>
+        </text>
+      </g>
+      <!-- 肌质网/内质网 -->
+      <g transform="translate(450,190)">
+        <rect width="180" height="70" rx="8" fill="#312e81" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="6,3"/>
+        <text x="90" y="30" text-anchor="middle" fill="#c7d2fe" font-size="12" font-weight="bold">肌质网 / 内质网</text>
+        <text x="90" y="48" text-anchor="middle" fill="#a5b4fc" font-size="10">高钙储存库</text>
+      </g>
+      <!-- SR钙泵 -->
+      <g transform="translate(510,140)">
+        <rect width="60" height="50" rx="8" fill="#7c2d12" stroke="#fb923c" stroke-width="2"/>
+        <text x="30" y="22" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">SR钙泵</text>
+        <text x="30" y="36" text-anchor="middle" fill="#fed7aa" font-size="9">1ATP→2Ca²⁺</text>
+      </g>
+      <!-- Ca2+ into SR -->
+      <g>
+        <circle cx="540" cy="160" r="11" fill="#fb923c" opacity="0.85">
+          <animate attributeName="cy" from="160" to="210" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <text x="540" y="164" text-anchor="middle" fill="#1e293b" font-size="8" font-weight="bold">Ca²⁺
+          <animate attributeName="y" from="164" to="214" dur="2.5s" repeatCount="indefinite"/>
+        </text>
+      </g>
+      <!-- 箭头标注 -->
+      <text x="300" y="50" fill="#f87171" font-size="11" font-weight="bold">← Ca²⁺ 出胞</text>
+      <text x="600" y="250" fill="#fb923c" font-size="11" font-weight="bold">Ca²⁺ 入网储存 ↓</text>
+    </svg>
+  </div>
+  <div class="warn">
+    <strong>为什么胞质要保持低钙？</strong>低钙使细胞对Ca²⁺浓度增加高度敏感——少量Ca²⁺内流即可触发肌肉收缩、递质释放、腺体分泌等关键生理过程。如果胞质钙高，这些信号就会失灵。
+  </div>
+</div>
+
+<div class="panel">
+  <h3>🧪 质子泵（H⁺泵）</h3>
+  <table>
+    <thead><tr><th>类型</th><th>分布</th><th>功能</th><th>临床联系</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-h">H⁺-K⁺-ATP酶</span><br>（氢钾泵）</td>
+        <td>胃腺壁细胞顶端膜<br>肾集合管闰细胞</td>
+        <td>泌H⁺、摄K⁺<br>胃壁细胞→分泌盐酸<br>肾集合管→排酸保碱</td>
+        <td>奥美拉唑等质子泵抑制剂<br>抑制胃酸分泌，治疗胃溃疡</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-h">H⁺-ATP酶</span><br>（氢泵）</td>
+        <td>各种细胞器膜<br>（溶酶体、内体等）</td>
+        <td>将H⁺由胞质泵入细胞器<br>维持胞质中性 + 细胞器酸性</td>
+        <td>溶酶体酸性环境是水解酶<br>发挥作用的必要条件</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<!-- ==================== 4. 继发性主动转运 ==================== -->
+<section id="secondary">
+<h2>四、继发性主动转运（间接利用ATP）</h2>
+<p class="sub">钠泵建立Na⁺浓度梯度 → Na⁺顺差内流的势能带动其他物质逆差转运。点击切换同向/反向。</p>
+<div class="panel">
+  <div class="phase-tabs" id="sec-tabs">
+    <div class="phase-tab active" data-sec="symport">同向转运（Symport）</div>
+    <div class="phase-tab" data-sec="antiport">反向转运（Antiport）</div>
+  </div>
+  <div class="svg-wrap">
+    <svg id="sec-svg" viewBox="0 0 700 300" width="100%" style="max-width:680px">
+      <rect x="0" y="110" width="700" height="60" fill="#1e3a5f" rx="3"/>
+      <text x="20" y="100" fill="#64748b" font-size="12">细胞外（高 Na⁺）</text>
+      <text x="20" y="195" fill="#64748b" font-size="12">细胞内（低 Na⁺）</text>
+      <!-- 转运体 -->
+      <g transform="translate(310,90)">
+        <rect width="80" height="100" rx="12" fill="#065f46" stroke="#4ade80" stroke-width="2"/>
+        <text x="40" y="40" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" id="transporter-name">Na⁺-葡萄糖</text>
+        <text x="40" y="56" text-anchor="middle" fill="#bbf7d0" font-size="10" id="transporter-sub">同向转运体</text>
+        <text x="40" y="72" text-anchor="middle" fill="#bbf7d0" font-size="9" id="transporter-loc">小肠上皮</text>
+      </g>
+      <g id="sec-particles"></g>
+      <text id="sec-desc" x="350" y="30" text-anchor="middle" fill="#4ade80" font-size="13" font-weight="bold"></text>
+    </svg>
+  </div>
+  <div id="sec-info" class="info"></div>
+</div>
+</section>
+
+<!-- ==================== 5. 静息电位 ==================== -->
+<section id="resting">
+<h2>五、静息电位（Resting Potential, RP）</h2>
+<p class="sub">细胞安静时膜内外的电位差。点击"播放"观察K⁺外流如何形成内负外正。</p>
+<div class="panel">
+  <div style="text-align:center;margin-bottom:12px">
+    <button class="btn" onclick="startResting()">▶ 播放K⁺外流</button>
+    <button class="btn amber" onclick="resetResting()">↺ 重置</button>
+  </div>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 700 320" width="100%" style="max-width:680px">
+      <!-- 细胞 -->
+      <ellipse cx="350" cy="170" rx="200" ry="110" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <text x="350" y="175" text-anchor="middle" fill="#94a3b8" font-size="14">细胞内</text>
+      <!-- 电位显示 -->
+      <g transform="translate(560,30)">
+        <rect width="120" height="50" rx="8" fill="#0d9488"/>
+        <text x="60" y="22" text-anchor="middle" fill="#fff" font-size="11">膜电位</text>
+        <text id="rp-value" x="60" y="42" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold">0 mV</text>
+      </g>
+      <!-- K+ leak channels -->
+      <g id="leak-channels">
+        <rect x="200" y="68" width="30" height="20" rx="4" fill="#38bdf8" opacity="0.7"/>
+        <rect x="470" y="68" width="30" height="20" rx="4" fill="#38bdf8" opacity="0.7"/>
+        <rect x="200" y="252" width="30" height="20" rx="4" fill="#38bdf8" opacity="0.7"/>
+        <rect x="470" y="252" width="30" height="20" rx="4" fill="#38bdf8" opacity="0.7"/>
+      </g>
+      <text x="215" y="62" text-anchor="middle" fill="#38bdf8" font-size="9">K⁺漏通道</text>
+      <!-- K+ inside -->
+      <g id="k-inside">
+        <circle cx="280" cy="140" r="11" fill="#38bdf8" opacity="0.8"/>
+        <text x="280" y="144" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="bold">K⁺</text>
+        <circle cx="350" cy="130" r="11" fill="#38bdf8" opacity="0.8"/>
+        <text x="350" y="134" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="bold">K⁺</text>
+        <circle cx="420" cy="145" r="11" fill="#38bdf8" opacity="0.8"/>
+        <text x="420" y="149" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="bold">K⁺</text>
+        <circle cx="310" cy="190" r="11" fill="#38bdf8" opacity="0.8"/>
+        <text x="310" y="194" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="bold">K⁺</text>
+        <circle cx="390" cy="195" r="11" fill="#38bdf8" opacity="0.8"/>
+        <text x="390" y="199" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="bold">K⁺</text>
+      </g>
+      <!-- K+ outside (after leaking) -->
+      <g id="k-outside" opacity="0">
+        <circle cx="215" cy="40" r="10" fill="#38bdf8" opacity="0.7"/>
+        <text x="215" y="44" text-anchor="middle" fill="#0f172a" font-size="8" font-weight="bold">K⁺</text>
+        <circle cx="485" cy="45" r="10" fill="#38bdf8" opacity="0.7"/>
+        <text x="485" y="49" text-anchor="middle" fill="#0f172a" font-size="8" font-weight="bold">K⁺</text>
+        <circle cx="215" cy="285" r="10" fill="#38bdf8" opacity="0.7"/>
+        <text x="215" y="289" text-anchor="middle" fill="#0f172a" font-size="8" font-weight="bold">K⁺</text>
+        <circle cx="485" cy="280" r="10" fill="#38bdf8" opacity="0.7"/>
+        <text x="485" y="284" text-anchor="middle" fill="#0f172a" font-size="8" font-weight="bold">K⁺</text>
+      </g>
+      <!-- 负电荷标记 -->
+      <g id="negative-charges" opacity="0">
+        <text x="290" y="165" fill="#f87171" font-size="20" font-weight="bold">−</text>
+        <text x="350" y="160" fill="#f87171" font-size="20" font-weight="bold">−</text>
+        <text x="410" y="165" fill="#f87171" font-size="20" font-weight="bold">−</text>
+        <text x="320" y="210" fill="#f87171" font-size="16" font-weight="bold">−</text>
+        <text x="380" y="215" fill="#f87171" font-size="16" font-weight="bold">−</text>
+      </g>
+      <text id="resting-status" x="350" y="290" text-anchor="middle" fill="#94a3b8" font-size="12">点击播放观察K⁺外流</text>
+    </svg>
+  </div>
+  <div class="info">
+    <strong>静息电位形成机制（一个前提 + 一个条件）：</strong><br>
+    <strong>前提</strong>：钠泵造成离子分布不均——胞内高K⁺、胞外高Na⁺。<br>
+    <strong>条件</strong>：安静时膜主要对K⁺通透（钾漏通道持续开放），对Na⁺通透性很低。<br>
+    <strong>结果</strong>：K⁺顺浓度差外流 → 膜内留下不能外流的负离子（蛋白质等）→ 内负外正 → K⁺外流的化学驱动力 = 电场阻力 → 达到K⁺平衡电位（约-98mV）。实际静息电位约-70mV，因为还有少量Na⁺内流和钠泵的生电效应。
+  </div>
+</div>
+</section>
+
+<!-- ==================== 6. 动作电位交互 ==================== -->
+<section id="action">
+<h2>六、动作电位（Action Potential, AP）— 交互式时间轴</h2>
+<p class="sub">点击下方阶段或"播放全流程"，观察曲线变化与对应离子通道状态、离子流动。</p>
+<div class="panel">
+  <div style="text-align:center;margin-bottom:14px">
+    <button class="btn" onclick="playAction()">▶ 播放全流程</button>
+    <button class="btn amber" onclick="resetAction()">↺ 重置</button>
+  </div>
+  <div class="phase-tabs" id="ap-tabs">
+    <div class="phase-tab active" data-ap="resting">① 静息状态</div>
+    <div class="phase-tab" data-ap="depolarize">② 去极化（上升支）</div>
+    <div class="phase-tab" data-ap="peak">③ 峰值</div>
+    <div class="phase-tab" data-ap="repolarize">④ 复极化（下降支）</div>
+    <div class="phase-tab" data-ap="hyperpolarize">⑤ 后超极化</div>
+  </div>
+
+  <div class="svg-wrap">
+    <svg viewBox="0 0 820 400" width="100%" style="max-width:800px">
+      <!-- 坐标轴 -->
+      <line x1="80" y1="350" x2="780" y2="350" stroke="#64748b" stroke-width="1.5"/>
+      <text x="740" y="370" fill="#64748b" font-size="12">时间 (ms)</text>
+      <line x1="80" y1="30" x2="80" y2="350" stroke="#64748b" stroke-width="1.5"/>
+      <text x="30" y="50" fill="#64748b" font-size="11" transform="rotate(-90 45,200)">膜电位 (mV)</text>
+
+      <!-- 参考线 -->
+      <line x1="80" y1="60" x2="780" y2="60" stroke="#f87171" stroke-dasharray="5,4" stroke-width="1" opacity="0.5"/>
+      <text x="85" y="55" fill="#f87171" font-size="11">+30 超射峰值</text>
+
+      <line x1="80" y1="130" x2="780" y2="130" stroke="#475569" stroke-dasharray="4,4" stroke-width="1"/>
+      <text x="85" y="125" fill="#94a3b8" font-size="11">0</text>
+
+      <line x1="80" y1="220" x2="780" y2="220" stroke="#fbbf24" stroke-dasharray="5,4" stroke-width="1.2"/>
+      <text x="700" y="215" fill="#fbbf24" font-size="11" font-weight="bold">阈电位 -55mV</text>
+
+      <line x1="80" y1="260" x2="780" y2="260" stroke="#2dd4bf" stroke-dasharray="6,4" stroke-width="1.5"/>
+      <text x="700" y="275" fill="#2dd4bf" font-size="11" font-weight="bold">静息电位 -70mV</text>
+
+      <line x1="80" y1="310" x2="780" y2="310" stroke="#14b8a6" stroke-dasharray="4,4" stroke-width="1" opacity="0.6"/>
+      <text x="680" y="325" fill="#14b8a6" font-size="10">后超极化(约-80~-90mV)</text>
+
+      <!-- 动作电位曲线（完整，默认显示） -->
+      <path id="ap-curve" d="M 110 260 L 180 260 C 200 260, 210 240, 225 220 C 245 170, 270 80, 290 60 C 310 110, 340 210, 380 255 C 420 290, 470 305, 530 300 C 590 295, 660 270, 750 260"
+            fill="none" stroke="#f87171" stroke-width="3" stroke-linecap="round"/>
+
+      <!-- 高亮当前阶段 -->
+      <path id="ap-highlight" d="" fill="none" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" opacity="0"/>
+
+      <!-- 关键点 -->
+      <circle id="point-resting" cx="110" cy="260" r="5" fill="#2dd4bf"/>
+      <circle id="point-threshold" cx="225" cy="220" r="5" fill="#fbbf24"/>
+      <circle id="point-peak" cx="290" cy="60" r="5" fill="#f87171"/>
+      <circle id="point-repolarize" cx="380" cy="255" r="5" fill="#38bdf8"/>
+      <circle id="point-hyper" cx="530" cy="300" r="5" fill="#14b8a6"/>
+
+      <!-- 阶段标注 -->
+      <text id="label-depolarize" x="230" y="150" fill="#f87171" font-size="12" font-weight="bold" opacity="0.5">↑ Na⁺内流</text>
+      <text id="label-repolarize" x="390" y="200" fill="#38bdf8" font-size="12" font-weight="bold" opacity="0.5">↓ K⁺外流</text>
+    </svg>
+  </div>
+
+  <!-- 离子通道状态面板 -->
+  <div id="channel-panel" class="panel" style="background:#0f172a;border:1px solid #334155;margin-top:16px">
+    <h3 style="color:#fbbf24">📊 当前阶段：<span id="ap-phase-name">静息状态</span></h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:12px">
+      <div style="background:#1e293b;padding:14px;border-radius:10px;border-left:4px solid #fbbf24">
+        <div style="color:#94a3b8;font-size:.8rem;margin-bottom:4px">电压门控Na⁺通道</div>
+        <div id="na-channel-state" style="color:#fbbf24;font-size:1.1rem;font-weight:bold">关闭（备用）</div>
+      </div>
+      <div style="background:#1e293b;padding:14px;border-radius:10px;border-left:4px solid #38bdf8">
+        <div style="color:#94a3b8;font-size:.8rem;margin-bottom:4px">电压门控K⁺通道</div>
+        <div id="k-channel-state" style="color:#38bdf8;font-size:1.1rem;font-weight:bold">关闭</div>
+      </div>
+      <div style="background:#1e293b;padding:14px;border-radius:10px;border-left:4px solid #f87171">
+        <div style="color:#94a3b8;font-size:.8rem;margin-bottom:4px">主要离子流动</div>
+        <div id="ion-flow-state" style="color:#f87171;font-size:1.1rem;font-weight:bold">K⁺外流（漏通道）</div>
+      </div>
+      <div style="background:#1e293b;padding:14px;border-radius:10px;border-left:4px solid #4ade80">
+        <div style="color:#94a3b8;font-size:.8rem;margin-bottom:4px">膜电位变化</div>
+        <div id="voltage-state" style="color:#4ade80;font-size:1.1rem;font-weight:bold">-70mV（稳定）</div>
+      </div>
+    </div>
+    <div id="ap-detail" class="info" style="margin-top:14px">
+      细胞安静时，钠泵维持离子分布，钾漏通道允许K⁺持续外流，膜电位稳定在-70mV。电压门控Na⁺和K⁺通道均处于关闭（备用）状态，随时可被去极化激活。
+    </div>
+  </div>
+
+  <div class="warn" style="margin-top:16px">
+    <strong>关键考点：</strong>①动作电位"全或无"——阈下刺激不产生AP，达阈电位后产生幅度固定的AP；②不衰减传导——AP幅度不随传导距离减小；③有不应期——绝对不应期（Na⁺通道失活）+相对不应期（部分恢复）；④上升支=Na⁺内流（正反馈），下降支=K⁺外流，后超极化=K⁺外流未止+钠泵加强。
+  </div>
+</div>
+</section>
+
+<!-- ==================== 7. 数据速查表 ==================== -->
+<section id="summary">
+<h2>七、关键数据速查表</h2>
+<p class="sub">考试常考的数字，考前扫一眼。</p>
+<div class="panel">
+  <table>
+    <thead><tr><th>知识点</th><th>关键数据</th><th>备注</th></tr></thead>
+    <tbody>
+      <tr><td>钠泵转运比</td><td><strong>3 Na⁺出 : 2 K⁺入</strong></td><td>每分解1分子ATP</td></tr>
+      <tr><td>质膜钙泵</td><td>1 ATP → <strong>1 Ca²⁺</strong> 出胞</td><td>—</td></tr>
+      <tr><td>SR/ER钙泵</td><td>1 ATP → <strong>2 Ca²⁺</strong> 入网</td><td>—</td></tr>
+      <tr><td>胞质Ca²⁺浓度</td><td><strong>0.1~0.2 μM</strong></td><td>胞外1~2 mM，差约<strong>万倍</strong></td></tr>
+      <tr><td>静息电位（神经）</td><td><strong>-70 mV</strong></td><td>K⁺平衡电位约-98mV</td></tr>
+      <tr><td>阈电位</td><td><strong>-55 mV</strong></td><td>比静息电位去极化约15mV</td></tr>
+      <tr><td>超射峰值</td><td>约 <strong>+30 mV</strong></td><td>接近Na⁺平衡电位(+60mV)</td></tr>
+      <tr><td>后超极化</td><td>约 <strong>-80~-90 mV</strong></td><td>K⁺外流未止+钠泵加强</td></tr>
+      <tr><td>钠-钙交换</td><td><strong>3 Na⁺入 : 1 Ca²⁺出</strong></td><td>反向转运，维持胞内低钙</td></tr>
+      <tr><td>动作电位时程</td><td>神经纤维约 <strong>1~2 ms</strong></td><td>心肌细胞可达200ms以上</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h3>📖 物质转运方式对比</h3>
+  <table>
+    <thead><tr><th>方式</th><th>浓度梯度</th><th>能量</th><th>举例</th></tr></thead>
+    <tbody>
+      <tr><td>单纯扩散</td><td>顺</td><td>不耗能</td><td>O₂、CO₂、N₂、类固醇激素</td></tr>
+      <tr><td>易化扩散（通道）</td><td>顺</td><td>不耗能</td><td>Na⁺、K⁺、Ca²⁺ 等离子通道</td></tr>
+      <tr><td>易化扩散（载体）</td><td>顺</td><td>不耗能</td><td>葡萄糖、氨基酸进入红细胞</td></tr>
+      <tr><td>原发性主动转运</td><td>逆</td><td>直接ATP</td><td>钠泵、钙泵、质子泵</td></tr>
+      <tr><td>继发性主动转运</td><td>逆</td><td>间接ATP（Na⁺梯度）</td><td>Na⁺-葡萄糖同向、Na⁺-Ca²⁺反向</td></tr>
+      <tr><td>膜泡运输</td><td>—</td><td>耗能</td><td>出胞（递质释放）、入胞（吞噬）</td></tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+</main>
+
+<footer>
+  生理学第3课 · 主动转运与细胞膜电活动 · 交互可视化 · 基于课堂录音与PPT整理 · 2026-09-10
+</footer>
+
+<script>
+// ==================== 细胞膜结构 ====================
+(function(){
+  const svg=document.getElementById('membrane-svg');
+  const upper=document.getElementById('bilayer-upper');
+  const lower=document.getElementById('bilayer-lower');
+  const proteins=document.getElementById('membrane-proteins');
+  const ions=document.getElementById('ions-layer');
+  const desc=document.getElementById('transport-desc');
+  const tabs=document.querySelectorAll('#transport-tabs .phase-tab');
+
+  // 画磷脂双分子层
+  for(let i=0;i<14;i++){
+    const x=60+i*50;
+    // 上排头部
+    const c1=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c1.setAttribute('cx',x);c1.setAttribute('cy',145);c1.setAttribute('r',8);c1.setAttribute('fill','#fbbf24');c1.setAttribute('opacity','0.8');
+    upper.appendChild(c1);
+    const l1=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l1.setAttribute('x1',x-4);l1.setAttribute('y1',153);l1.setAttribute('x2',x-4);l1.setAttribute('y2',175);l1.setAttribute('stroke','#94a3b8');l1.setAttribute('stroke-width','2');
+    upper.appendChild(l1);
+    const l1b=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l1b.setAttribute('x1',x+4);l1b.setAttribute('y1',153);l1b.setAttribute('x2',x+4);l1b.setAttribute('y2',175);l1b.setAttribute('stroke','#94a3b8');l1b.setAttribute('stroke-width','2');
+    upper.appendChild(l1b);
+    // 下排头部
+    const c2=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c2.setAttribute('cx',x);c2.setAttribute('cy',205);c2.setAttribute('r',8);c2.setAttribute('fill','#fbbf24');c2.setAttribute('opacity','0.8');
+    lower.appendChild(c2);
+    const l2=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l2.setAttribute('x1',x-4);l2.setAttribute('y1',197);l2.setAttribute('x2',x-4);l2.setAttribute('y2',175);l2.setAttribute('stroke','#94a3b8');l2.setAttribute('stroke-width','2');
+    lower.appendChild(l2);
+    const l2b=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l2b.setAttribute('x1',x+4);l2b.setAttribute('y1',197);l2b.setAttribute('x2',x+4);l2b.setAttribute('y2',175);l2b.setAttribute('stroke','#94a3b8');l2b.setAttribute('stroke-width','2');
+    lower.appendChild(l2b);
+  }
+
+  const modes={
+    passive:{desc:'<strong>被动转运</strong>：物质顺浓度梯度/电位梯度通过膜，不消耗ATP。包括单纯扩散（O₂、CO₂）和易化扩散（通道介导如离子通道、载体介导如葡萄糖转运体）。动力来自浓度梯度本身。',proteinColor:'#38bdf8',proteinLabel:'通道/载体'},
+    primary:{desc:'<strong>原发性主动转运</strong>：离子泵直接水解ATP供能，将离子逆浓度梯度转运。最重要的是钠泵（3Na⁺出/2K⁺入），还有钙泵和质子泵。是继发性主动转运和电活动的能量基础。',proteinColor:'#0d9488',proteinLabel:'离子泵(ATP酶)'},
+    secondary:{desc:'<strong>继发性主动转运</strong>：不直接水解ATP，而是利用钠泵建立的Na⁺浓度梯度（胞外高钠）作为势能储备。Na⁺顺差内流的同时，带动其他物质逆差转运。分为同向转运（Na⁺-葡萄糖）和反向转运（Na⁺-Ca²⁺、Na⁺-H⁺）。',proteinColor:'#4ade80',proteinLabel:'转运体'},
+    vesicle:{desc:'<strong>膜泡运输</strong>：大分子和颗粒物质不能直接穿过膜，通过膜泡形成和融合进出细胞。出胞（exocytosis）如神经递质释放、激素分泌；入胞（endocytosis）如吞噬、吞饮。需要消耗ATP和细胞骨架参与。',proteinColor:'#c084fc',proteinLabel:'膜泡'}
+  };
+
+  function renderMode(mode){
+    proteins.innerHTML='';ions.innerHTML='';
+    const m=modes[mode];
+    // 画膜蛋白
+    const px=350;
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',px-35);rect.setAttribute('y',125);rect.setAttribute('width',70);rect.setAttribute('height',100);rect.setAttribute('rx',10);
+    rect.setAttribute('fill',m.proteinColor);rect.setAttribute('opacity','0.85');
+    proteins.appendChild(rect);
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',px);txt.setAttribute('y',175);txt.setAttribute('text-anchor','middle');txt.setAttribute('fill','#fff');txt.setAttribute('font-size','11');txt.setAttribute('font-weight','bold');
+    txt.textContent=m.proteinLabel;
+    proteins.appendChild(txt);
+
+    // 画离子/物质
+    const colors={Na:'#fbbf24',K:'#38bdf8',Ca:'#f87171',Glu:'#4ade80',H:'#c084fc'};
+    let particles=[];
+    if(mode==='passive'){particles=[{t:'Na',x:150,y:80,dx:0,dy:120},{t:'K',x:600,y:260,dx:0,dy:-120},{t:'O₂',x:200,y:70,dx:0,dy:130}];}
+    else if(mode==='primary'){particles=[{t:'Na',x:250,y:260,dx:100,dy:-180},{t:'Na',x:300,y:270,dx:50,dy:-190},{t:'Na',x:200,y:250,dx:150,dy:-170},{t:'K',x:500,y:80,dx:-150,dy:170},{t:'K',x:550,y:90,dx:-200,dy:160}];}
+    else if(mode==='secondary'){particles=[{t:'Na',x:200,y:80,dx:150,dy:170},{t:'Glu',x:180,y:75,dx:170,dy:175},{t:'Na',x:550,y:260,dx:-200,dy:-170},{t:'Ca',x:570,y:270,dx:-220,dy:-180}];}
+    else{particles=[{t:'大分子',x:300,y:80,dx:50,dy:0},{t:'颗粒',x:450,y:260,dx:-50,dy:0}];}
+
+    particles.forEach((p,i)=>{
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+      const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',p.t.length>2?16:12);
+      c.setAttribute('fill',colors[p.t]||'#94a3b8');c.setAttribute('opacity','0.85');
+      g.appendChild(c);
+      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',p.x);t.setAttribute('y',p.y+4);t.setAttribute('text-anchor','middle');
+      t.setAttribute('fill','#0f172a');t.setAttribute('font-size',p.t.length>2?'9':'10');t.setAttribute('font-weight','bold');
+      t.textContent=p.t;
+      g.appendChild(t);
+      if(mode!=='vesicle'){
+        const anim=document.createElementNS('http://www.w3.org/2000/svg','animateTransform');
+        anim.setAttribute('attributeName','transform');anim.setAttribute('type','translate');
+        anim.setAttribute('from','0,0');anim.setAttribute('to',`${p.dx},${p.dy}`);
+        anim.setAttribute('dur','2.5s');anim.setAttribute('repeatCount','indefinite');
+        g.appendChild(anim);
+      }
+      ions.appendChild(g);
+    });
+    desc.innerHTML=m.desc;
+  }
+
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      renderMode(tab.dataset.mode);
+    });
+  });
+  renderMode('passive');
+})();
+
+// ==================== 钠泵动画 ====================
+let pumpRunning=false;
+function startNaPump(){
+  if(pumpRunning)return;
+  pumpRunning=true;
+  const status=document.getElementById('pump-status');
+  const naIn=document.getElementById('na-in');
+  const naOut=document.getElementById('na-out');
+  const kIn=document.getElementById('k-in');
+  const kOut=document.getElementById('k-out');
+  const atp=document.getElementById('atp-molecule');
+  const adp=document.getElementById('adp-output');
+  const pump=document.getElementById('pump-protein');
+
+  const steps=[
+    {t:0,status:'① 3个Na⁺结合到钠泵胞内侧',action:()=>{pump.setAttribute('transform','translate(310,120) scale(1.05)');}},
+    {t:800,status:'② ATP水解 → 磷酸化，构象改变',action:()=>{atp.setAttribute('opacity','0.3');adp.setAttribute('opacity','1');}},
+    {t:1600,status:'③ 3个Na⁺释放到胞外',action:()=>{naIn.setAttribute('opacity','0.2');naOut.setAttribute('opacity','1');}},
+    {t:2400,status:'④ 2个K⁺结合到胞外侧',action:()=>{}},
+    {t:3200,status:'⑤ 去磷酸化，构象恢复',action:()=>{pump.setAttribute('transform','translate(310,120) scale(1)');atp.setAttribute('opacity','1');adp.setAttribute('opacity','0');}},
+    {t:4000,status:'⑥ 2个K⁺释放到胞内 — 循环完成',action:()=>{kOut.setAttribute('opacity','0.2');kIn.setAttribute('opacity','1');}},
+    {t:4800,status:'循环完成，准备下一轮',action:()=>{pumpRunning=false;resetNaPump();}}
+  ];
+
+  steps.forEach(s=>{
+    setTimeout(()=>{
+      if(!pumpRunning&&s.t<4800)return;
+      status.textContent=s.status;
+      s.action();
+    },s.t);
+  });
+}
+function resetNaPump(){
+  pumpRunning=false;
+  document.getElementById('pump-status').textContent='待机状态';
+  document.getElementById('na-in').setAttribute('opacity','1');
+  document.getElementById('na-out').setAttribute('opacity','0.3');
+  document.getElementById('k-in').setAttribute('opacity','0.3');
+  document.getElementById('k-out').setAttribute('opacity','1');
+  document.getElementById('atp-molecule').setAttribute('opacity','1');
+  document.getElementById('adp-output').setAttribute('opacity','0');
+  document.getElementById('pump-protein').setAttribute('transform','translate(310,120) scale(1)');
+}
+resetNaPump();
+
+// ==================== 继发性转运 ====================
+(function(){
+  const tabs=document.querySelectorAll('#sec-tabs .phase-tab');
+  const particles=document.getElementById('sec-particles');
+  const desc=document.getElementById('sec-desc');
+  const info=document.getElementById('sec-info');
+  const tName=document.getElementById('transporter-name');
+  const tSub=document.getElementById('transporter-sub');
+  const tLoc=document.getElementById('transporter-loc');
+
+  const data={
+    symport:{
+      name:'Na⁺-葡萄糖',sub:'同向转运体',loc:'小肠上皮/肾小管',
+      desc:'Na⁺顺差入胞 + 葡萄糖逆差入胞 → 同一方向',
+      info:'<strong>同向转运（Symport）</strong>：被转运的两种物质向同一方向移动。典型例子：①小肠上皮细胞的Na⁺-葡萄糖同向转运体（SGLT）——食物中的葡萄糖在小肠被吸收进入上皮细胞；②Na⁺-氨基酸同向转运体。能量来自钠泵建立的Na⁺浓度梯度。',
+      particles:[
+        {t:'Na⁺',color:'#fbbf24',x:150,y:60,dx:160,dy:160},
+        {t:'Na⁺',color:'#fbbf24',x:200,y:80,dx:110,dy:140},
+        {t:'Glu',color:'#4ade80',x:160,y:50,dx:150,dy:170},
+        {t:'Glu',color:'#4ade80',x:210,y:70,dx:100,dy:150}
+      ]
+    },
+    antiport:{
+      name:'Na⁺-Ca²⁺',sub:'反向转运体',loc:'心肌细胞/肾小管',
+      desc:'Na⁺顺差入胞 + Ca²⁺逆差出胞 → 相反方向',
+      info:'<strong>反向转运（Antiport / 交换）</strong>：两种物质转运方向相反。典型例子：①Na⁺-Ca²⁺交换体（3Na⁺入、1Ca²⁺出）——心肌细胞中维持胞内低钙，是强心苷类药物的作用靶点；②Na⁺-H⁺交换体（Na⁺入、H⁺出）——肾小管近端小管调节酸碱平衡。',
+      particles:[
+        {t:'Na⁺',color:'#fbbf24',x:150,y:60,dx:160,dy:160},
+        {t:'Na⁺',color:'#fbbf24',x:180,y:75,dx:130,dy:145},
+        {t:'Na⁺',color:'#fbbf24',x:130,y:85,dx:180,dy:135},
+        {t:'Ca²⁺',color:'#f87171',x:520,y:250,dx:-170,dy:-160},
+        {t:'Ca²⁺',color:'#f87171',x:550,y:265,dx:-200,dy:-175}
+      ]
+    }
+  };
+
+  function render(sec){
+    const d=data[sec];
+    particles.innerHTML='';
+    tName.textContent=d.name;tSub.textContent=d.sub;tLoc.textContent=d.loc;
+    desc.textContent=d.desc;info.innerHTML=d.info;
+    d.particles.forEach(p=>{
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+      const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',p.t.length>2?13:11);
+      c.setAttribute('fill',p.color);c.setAttribute('opacity','0.85');
+      g.appendChild(c);
+      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',p.x);t.setAttribute('y',p.y+4);t.setAttribute('text-anchor','middle');
+      t.setAttribute('fill','#0f172a');t.setAttribute('font-size','9');t.setAttribute('font-weight','bold');
+      t.textContent=p.t;
+      g.appendChild(t);
+      const anim=document.createElementNS('http://www.w3.org/2000/svg','animateTransform');
+      anim.setAttribute('attributeName','transform');anim.setAttribute('type','translate');
+      anim.setAttribute('from','0,0');anim.setAttribute('to',`${p.dx},${p.dy}`);
+      anim.setAttribute('dur','2.5s');anim.setAttribute('repeatCount','indefinite');
+      g.appendChild(anim);
+      particles.appendChild(g);
+    });
+  }
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      render(tab.dataset.sec);
+    });
+  });
+  render('symport');
+})();
+
+// ==================== 静息电位动画 ====================
+let restingRunning=false;
+function startResting(){
+  if(restingRunning)return;
+  restingRunning=true;
+  const val=document.getElementById('rp-value');
+  const kOut=document.getElementById('k-outside');
+  const neg=document.getElementById('negative-charges');
+  const status=document.getElementById('resting-status');
+
+  const vals=['0 mV','-10 mV','-25 mV','-40 mV','-55 mV','-65 mV','-70 mV'];
+  vals.forEach((v,i)=>{
+    setTimeout(()=>{
+      if(!restingRunning)return;
+      val.textContent=v;
+      status.textContent=`K⁺持续外流中... 膜电位 ${v}`;
+      if(i>=3){kOut.setAttribute('opacity',String(0.3+i*0.1));neg.setAttribute('opacity',String(0.2+i*0.15));}
+      if(i===vals.length-1){status.textContent='✓ 达到静息电位 -70mV（K⁺外流=电场阻力）';restingRunning=false;}
+    },i*500);
+  });
+}
+function resetResting(){
+  restingRunning=false;
+  document.getElementById('rp-value').textContent='0 mV';
+  document.getElementById('k-outside').setAttribute('opacity','0');
+  document.getElementById('negative-charges').setAttribute('opacity','0');
+  document.getElementById('resting-status').textContent='点击播放观察K⁺外流';
+}
+
+// ==================== 动作电位交互 ====================
+const apData={
+  resting:{name:'① 静息状态',na:'关闭（备用）',k:'关闭',flow:'K⁺外流（漏通道）',volt:'-70mV（稳定）',
+    detail:'细胞安静时，钠泵维持离子分布，钾漏通道允许K⁺持续外流，膜电位稳定在-70mV。电压门控Na⁺和K⁺通道均处于关闭（备用）状态。',
+    highlight:'M 110 260 L 180 260'},
+  depolarize:{name:'② 去极化（上升支）',na:'大量开放（激活）',k:'开始开放',flow:'Na⁺快速内流',volt:'-70→+30mV（快速上升）',
+    detail:'阈刺激使膜去极化达阈电位(-55mV)→电压门控Na⁺通道大量开放→Na⁺顺浓度差和电位差快速内流→膜内电位迅速变正→去极化与Na⁺通道开放形成正反馈→超射。这是动作电位上升支的离子基础。',
+    highlight:'M 180 260 C 200 260, 210 240, 225 220 C 245 170, 270 80, 290 60'},
+  peak:{name:'③ 峰值',na:'失活（关闭）',k:'大量开放',flow:'Na⁺内流停止，K⁺外流开始',volt:'约+30mV（超射）',
+    detail:'膜电位达峰值(约+30mV，接近Na⁺平衡电位+60mV)时，Na⁺通道进入失活状态（不应期的基础），同时电压门控K⁺通道大量开放，K⁺开始外流，膜电位开始复极。',
+    highlight:'M 290 60'},
+  repolarize:{name:'④ 复极化（下降支）',na:'失活',k:'大量开放',flow:'K⁺快速外流',volt:'+30→-70mV（快速下降）',
+    detail:'K⁺通道大量开放，K⁺顺浓度差外流（外向电流），膜内电位由正变负，迅速恢复到静息电位水平。这是动作电位下降支的离子基础。K⁺通道无失活，关闭较慢。',
+    highlight:'M 290 60 C 310 110, 340 210, 380 255'},
+  hyperpolarize:{name:'⑤ 后超极化',na:'恢复（备用）',k:'逐渐关闭',flow:'K⁺外流未止 + 钠泵加强',volt:'约-80~-90mV（低于静息）',
+    detail:'复极后期K⁺外流尚未停止（K⁺通道关闭慢），同时钠泵活动加强（排Na⁺摄K⁺），使膜电位低于静息电位，出现后超极化（负后电位）。随后K⁺通道完全关闭，钠泵恢复正常活动，膜电位回到-70mV。',
+    highlight:'M 380 255 C 420 290, 470 305, 530 300 C 590 295, 660 270, 750 260'}
+};
+
+function setAP(phase){
+  const d=apData[phase];
+  document.querySelectorAll('#ap-tabs .phase-tab').forEach(t=>t.classList.toggle('active',t.dataset.ap===phase));
+  document.getElementById('ap-phase-name').textContent=d.name;
+  document.getElementById('na-channel-state').textContent=d.na;
+  document.getElementById('k-channel-state').textContent=d.k;
+  document.getElementById('ion-flow-state').textContent=d.flow;
+  document.getElementById('voltage-state').textContent=d.volt;
+  document.getElementById('ap-detail').textContent=d.detail;
+  const hl=document.getElementById('ap-highlight');
+  hl.setAttribute('d',d.highlight);
+  hl.setAttribute('opacity','1');
+}
+
+document.querySelectorAll('#ap-tabs .phase-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>setAP(tab.dataset.ap));
+});
+
+let apPlaying=false;
+function playAction(){
+  if(apPlaying)return;
+  apPlaying=true;
+  const phases=['resting','depolarize','peak','repolarize','hyperpolarize'];
+  phases.forEach((p,i)=>{
+    setTimeout(()=>{if(apPlaying||i===0)setAP(p);},i*1500);
+  });
+  setTimeout(()=>{apPlaying=false;},phases.length*1500+500);
+}
+function resetAction(){
+  apPlaying=false;
+  setAP('resting');
+  document.getElementById('ap-highlight').setAttribute('opacity','0');
+}
+setAP('resting');
+</script>
+</body>
+</html>
